@@ -9,18 +9,37 @@ type BGMember struct {
 	StreakDays int
 }
 
-func NewBGMember(username string) (*BGMember, error) {
-	client := github.NewClient(nil)
+var client = github.NewClient(nil)
+
+func GetBGMember(username string) (*BGMember, error) {
 	user, _, err := client.Users.Get(username)
 	if err != nil {
 		return nil, err
 	}
 
-	var name string
+	bgm := memberFromUser(*user)
+
+	return bgm, nil
+}
+
+func GetAllBGMembers(orgname string) ([]*BGMember, error) {
+	memberList, _, err := client.Organizations.ListMembers(orgname, &github.ListMembersOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var bgMembers = []*BGMember{}
+	for _, u := range memberList {
+		bgm := memberFromUser(u)
+		bgMembers = append(bgMembers, bgm)
+	}
+	return bgMembers, nil
+}
+
+func memberFromUser(user github.User) *BGMember {
+	name := ""
 	if user.Name != nil {
 		name = *user.Name
-	} else {
-		name = ""
 	}
 
 	bgm := &BGMember{
@@ -30,5 +49,5 @@ func NewBGMember(username string) (*BGMember, error) {
 		StreakDays: 0,
 	}
 
-	return bgm, nil
+	return bgm
 }
