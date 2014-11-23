@@ -2,7 +2,9 @@ package bgtracker_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/boltdb/bolt"
 	"github.com/ejamesc/bgtracker"
 )
 
@@ -14,14 +16,27 @@ func TestGetBGMember(t *testing.T) {
 
 	assert(t, bgm.GithubID == username, "expected bgm.GithubID to be %s, got %s", username, bgm.GithubID)
 	assert(t, bgm.Name == "", "expected bgm.Name to be empty, got %s", bgm.Name)
-	assert(t, bgm.NoCommits == 0, "expected bgm.NoCommits to be 0, got %v", bgm.NoCommits)
-	assert(t, bgm.StreakDays == 0, "expected bgm.StreakDays to be 0, got %v", bgm.StreakDays)
 }
 
-func TestGetAllBGMembers(t *testing.T) {
-	orgname := "basement-gang"
-	members, err := bgtracker.GetAllBGMembers(orgname)
+func TestNewTracker_FromAPI(t *testing.T) {
+	tr, err := bgtracker.NewTracker("basement-gang")
 
 	ok(t, err)
-	assert(t, len(members) == 9, "expected members to be 9, got %v instead", len(members))
+	equals(t, tr.Orgname, "basement-gang")
+
+	// Verify saved to DB
+	db, _ := bolt.Open("bgtracker.db", 0600, nil)
+	defer db.Close()
+	db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("trackerinfo"))
+		assert(t, b != nil, "expect members bucket to have been created, but was not")
+
+		o := b.Get([]byte("Orgname"))
+		equals(t, o, []byte("basement-gang"))
+
+		lt := b.Get([]byte("LastUpdated"))
+		equals(t, string(lt), tr.LastUpdated.Format(time.RFC3339))
+
+		return nil
+	})
 }
