@@ -13,7 +13,7 @@ var testDBName = "test_bgtracker.db"
 
 func TestNewTracker_FromAPI(t *testing.T) {
 	tr, err := bgtracker.NewTracker("basement-gang", testDBName)
-	defer os.Remove("test_bgtracker.db")
+	defer os.Remove(testDBName)
 
 	ok(t, err)
 	equals(t, tr.Orgname, "basement-gang")

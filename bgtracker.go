@@ -93,7 +93,7 @@ func (t *Tracker) loadFromAPI(tx *bolt.Tx) error {
 	for _, mem := range t.Members {
 		err = memB.Put([]byte(mem.GithubID), mem.ToJSON())
 		if err != nil {
-			return nil
+			return err
 		}
 	}
 
@@ -130,7 +130,6 @@ func GetBGMember(username string) (*BGMember, error) {
 	}
 
 	bgm := memberFromUser(*user)
-
 	return bgm, nil
 }
 
@@ -142,14 +141,12 @@ func memberFromUser(user github.User) *BGMember {
 		name = *user.Name
 	}
 
-	bgm := &BGMember{
+	return &BGMember{
 		GithubID:   *user.Login,
 		Name:       name,
 		NoCommits:  0,
 		StreakDays: 0,
 	}
-
-	return bgm
 }
 
 // Recreates a bucket
@@ -158,6 +155,5 @@ func reInitBucket(tx *bolt.Tx, bucketName []byte) (*bolt.Bucket, error) {
 	if b != nil {
 		tx.DeleteBucket(bucketName)
 	}
-	b, err := tx.CreateBucket(bucketName)
-	return b, err
+	return tx.CreateBucket(bucketName)
 }
