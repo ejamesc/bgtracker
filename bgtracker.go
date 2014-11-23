@@ -1,6 +1,7 @@
 package bgtracker
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -99,6 +100,17 @@ type BGMember struct {
 	Name       string
 	NoCommits  int
 	StreakDays int
+}
+
+func BGMemberFromJSON(js []byte) (*BGMember, error) {
+	var bgm BGMember
+	err := json.Unmarshal(js, &bgm)
+	return &bgm, err
+}
+
+func (b *BGMember) ToJSON() []byte {
+	j, _ := json.Marshal(b)
+	return j
 }
 
 // TODO: remove, because hardcoded

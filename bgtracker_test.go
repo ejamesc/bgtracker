@@ -8,15 +8,6 @@ import (
 	"github.com/ejamesc/bgtracker"
 )
 
-func TestGetBGMember(t *testing.T) {
-	username := "nattsw"
-	bgm, err := bgtracker.GetBGMember(username)
-
-	ok(t, err)
-
-	assert(t, bgm.GithubID == username, "expected bgm.GithubID to be %s, got %s", username, bgm.GithubID)
-	assert(t, bgm.Name == "", "expected bgm.Name to be empty, got %s", bgm.Name)
-}
 
 func TestNewTracker_FromAPI(t *testing.T) {
 	tr, err := bgtracker.NewTracker("basement-gang")
@@ -29,7 +20,7 @@ func TestNewTracker_FromAPI(t *testing.T) {
 	defer db.Close()
 	db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("trackerinfo"))
-		assert(t, b != nil, "expect members bucket to have been created, but was not")
+		assert(t, b != nil, "expect trackerinfo bucket to have been created, but was not")
 
 		o := b.Get([]byte("Orgname"))
 		equals(t, o, []byte("basement-gang"))
@@ -39,4 +30,44 @@ func TestNewTracker_FromAPI(t *testing.T) {
 
 		return nil
 	})
+}
+
+// TODO
+func TestNewTracker_FromDB(t *testing.T) {
+
+}
+
+// Test ability to get BGMember from API
+func TestGetBGMember(t *testing.T) {
+	username := "nattsw"
+	bgm, err := bgtracker.GetBGMember(username)
+
+	ok(t, err)
+
+	assert(t, bgm.GithubID == username, "expected bgm.GithubID to be %s, got %s", username, bgm.GithubID)
+	assert(t, bgm.Name == "", "expected bgm.Name to be empty, got %s", bgm.Name)
+}
+
+// BGMember fixture
+var bgmFixt = &bgtracker.BGMember{
+	GithubID:   "nattsw",
+	Name:       "Natalie Tay",
+	NoCommits:  0,
+	StreakDays: 0,
+}
+
+// Test conversion of BGMember into JSON
+func TestBGMember_ToJSON(t *testing.T) {
+	js := bgmFixt.ToJSON()
+	expectedJson := []byte(`{"GithubID":"nattsw","Name":"Natalie Tay","NoCommits":0,"StreakDays":0}`)
+	equals(t, js, expectedJson)
+}
+
+// Test creating BGMember from JSON
+func TestBGMemberFromJson(t *testing.T) {
+	js := []byte(`{"GithubID":"nattsw","Name":"Natalie Tay","NoCommits":0,"StreakDays":0}`)
+	bgm, err := bgtracker.BGMemberFromJSON(js)
+
+	ok(t, err)
+	equals(t, bgmFixt, bgm)
 }
