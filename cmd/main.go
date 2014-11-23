@@ -1,4 +1,4 @@
-package bgtracker
+package main
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 )
 
 func testHandler(w http.ResponseWriter, req *http.Request) {
-	fmt.Print(w, "Hello World")
+	fmt.Fprint(w, "Hello World")
 }
 
 func main() {
@@ -16,5 +16,5 @@ func main() {
 	r.HandleFunc("/", testHandler)
 
 	http.Handle("/", r)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":3000", nil)
 }
