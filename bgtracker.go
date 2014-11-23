@@ -21,12 +21,12 @@ type Tracker struct {
 }
 
 // Generator for new Tracker
-func NewTracker(orgname string) (*Tracker, error) {
+func NewTracker(orgname, dbname string) (*Tracker, error) {
 	tr := &Tracker{
 		Orgname: orgname,
 	}
 
-	db, err := bolt.Open("bgtracker.db", 0600, nil)
+	db, err := bolt.Open(dbname, 0600, nil)
 	defer db.Close()
 	if err != nil {
 		return nil, err

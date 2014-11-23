@@ -1,6 +1,7 @@
 package bgtracker_test
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -8,15 +9,17 @@ import (
 	"github.com/ejamesc/bgtracker"
 )
 
+var testDBName = "test_bgtracker.db"
 
 func TestNewTracker_FromAPI(t *testing.T) {
-	tr, err := bgtracker.NewTracker("basement-gang")
+	tr, err := bgtracker.NewTracker("basement-gang", testDBName)
+	defer os.Remove("test_bgtracker.db")
 
 	ok(t, err)
 	equals(t, tr.Orgname, "basement-gang")
 
 	// Verify saved to DB
-	db, _ := bolt.Open("bgtracker.db", 0600, nil)
+	db, _ := bolt.Open(testDBName, 0600, nil)
 	defer db.Close()
 	db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("trackerinfo"))
