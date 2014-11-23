@@ -31,6 +31,19 @@ func TestNewTracker_FromAPI(t *testing.T) {
 		lt := b.Get([]byte("LastUpdated"))
 		equals(t, string(lt), tr.LastUpdated.Format(time.RFC3339))
 
+		mb := tx.Bucket([]byte("members"))
+		assert(t, mb != nil, "expect members bucket to have been created, but was not")
+
+		c := mb.Cursor()
+		members := []*bgtracker.BGMember{}
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			curr, err := bgtracker.BGMemberFromJSON(v)
+			ok(t, err)
+			members = append(members, curr)
+		}
+
+		equals(t, len(members), 9)
+
 		return nil
 	})
 }

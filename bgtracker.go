@@ -80,16 +80,22 @@ func (t *Tracker) loadFromAPI(tx *bolt.Tx) error {
 	if err != nil {
 		return err
 	}
-	//memB, err := reInitBucket(tx, membersBucketName)
 
-	err = trackB.Put([]byte("Orgname"), []byte(t.Orgname))
+	trackB.Put([]byte("Orgname"), []byte(t.Orgname))
+	formattedTime := t.LastUpdated.Format(time.RFC3339)
+	trackB.Put([]byte("LastUpdated"), []byte(formattedTime))
+
+	memB, err := reInitBucket(tx, membersBucketName)
 	if err != nil {
 		return err
 	}
 
-	formattedTime := t.LastUpdated.Format(time.RFC3339)
-	err = trackB.Put([]byte("LastUpdated"), []byte(formattedTime))
-	return err
+	for _, mem := range t.Members {
+		err = memB.Put([]byte(mem.GithubID), mem.ToJSON())
+		if err != nil {
+			return nil
+		}
+	}
 
 	return err
 }
