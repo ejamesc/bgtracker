@@ -11,9 +11,11 @@ import (
 
 var testDBName = "test_bgtracker.db"
 
+// Test creating a new tracker when there's nothing
+// in the DB.
 func TestNewTracker_FromAPI(t *testing.T) {
 	tr, err := bgtracker.NewTracker("basement-gang", testDBName)
-	defer os.Remove(testDBName)
+	defer os.Remove("blahblah.db")
 
 	ok(t, err)
 	equals(t, tr.Orgname, "basement-gang")
@@ -48,9 +50,31 @@ func TestNewTracker_FromAPI(t *testing.T) {
 	})
 }
 
-// TODO
+// Test creating a new tracker when there's some stuff
+// already in the DB.
 func TestNewTracker_FromDB(t *testing.T) {
+	db, _ := bolt.Open("blahblah.db", 0600, nil)
+	defer os.Remove(testDBName)
 
+	tmpTime := time.Now().Format(time.RFC3339)
+	db.Update(func(tx *bolt.Tx) error {
+		tb, _ := tx.CreateBucketIfNotExists([]byte("trackerinfo"))
+		tb.Put([]byte("Orgname"), []byte("basement-gang"))
+		tb.Put([]byte("LastUpdated"), []byte(tmpTime))
+
+		mb, _ := tx.CreateBucketIfNotExists([]byte("members"))
+		mb.Put([]byte("nattsw"), bgmFixt.ToJSON())
+
+		return nil
+	})
+	db.Close()
+
+	tr, err := bgtracker.NewTracker("basement-gang", "blahblah.db")
+
+	ok(t, err)
+	equals(t, tr.Orgname, "basement-gang")
+	equals(t, 1, len(tr.Members))
+	equals(t, tr.LastUpdated.Format(time.RFC3339), tmpTime)
 }
 
 // Test ability to get BGMember from API

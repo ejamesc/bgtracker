@@ -41,7 +41,8 @@ func NewTracker(orgname, dbname string) (*Tracker, error) {
 			err = tr.loadFromAPI(tx)
 		} else {
 			// TODO
-			//tr.LoadFromDB()
+			err = tr.loadFromDB(infoB, membersB)
+
 		}
 
 		if err != nil {
@@ -56,6 +57,27 @@ func NewTracker(orgname, dbname string) (*Tracker, error) {
 	}
 
 	return tr, nil
+}
+
+// Load data from the DB and store in Tracker
+func (t *Tracker) loadFromDB(info, members *bolt.Bucket) error {
+	lastUpdated, err := time.Parse(time.RFC3339, string(info.Get([]byte("LastUpdated"))))
+	if err != nil {
+		return err
+	}
+	t.LastUpdated = lastUpdated
+
+	c := members.Cursor()
+	membersList := []*BGMember{}
+	for k, v := c.First(); k != nil; k, v = c.Next() {
+		curr, err := BGMemberFromJSON(v)
+		if err != nil {
+			return err
+		}
+		membersList = append(membersList, curr)
+	}
+	t.Members = membersList
+	return nil
 }
 
 // Get all members from the Github API, store in Tracker
