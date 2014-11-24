@@ -15,7 +15,7 @@ var testDBName = "test_bgtracker.db"
 // in the DB.
 func TestNewTracker_FromAPI(t *testing.T) {
 	tr, err := bgtracker.NewTracker("basement-gang", testDBName)
-	defer os.Remove("blahblah.db")
+	defer os.Remove(testDBName)
 
 	ok(t, err)
 	equals(t, tr.Orgname, "basement-gang")
@@ -54,7 +54,7 @@ func TestNewTracker_FromAPI(t *testing.T) {
 // already in the DB.
 func TestNewTracker_FromDB(t *testing.T) {
 	db, _ := bolt.Open("blahblah.db", 0600, nil)
-	defer os.Remove(testDBName)
+	defer os.Remove("blahblah.db")
 
 	tmpTime := time.Now().Format(time.RFC3339)
 	db.Update(func(tx *bolt.Tx) error {
