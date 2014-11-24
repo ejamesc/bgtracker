@@ -1,6 +1,8 @@
 package bgtracker_test
 
 import (
+	"fmt"
+	"math/rand"
 	"os"
 	"testing"
 	"time"
@@ -9,11 +11,10 @@ import (
 	"github.com/ejamesc/bgtracker"
 )
 
-var testDBName = "test_bgtracker.db"
-
 // Test creating a new tracker when there's nothing
 // in the DB.
 func TestNewTracker_FromAPI(t *testing.T) {
+	testDBName := genDBName()
 	tr, err := bgtracker.NewTracker("basement-gang", testDBName)
 	defer os.Remove(testDBName)
 
@@ -53,8 +54,9 @@ func TestNewTracker_FromAPI(t *testing.T) {
 // Test creating a new tracker when there's some stuff
 // already in the DB.
 func TestNewTracker_FromDB(t *testing.T) {
-	db, _ := bolt.Open("blahblah.db", 0600, nil)
-	defer os.Remove("blahblah.db")
+	testDBName := genDBName()
+	db, _ := bolt.Open(testDBName, 0600, nil)
+	defer os.Remove(testDBName)
 
 	tmpTime := time.Now().Format(time.RFC3339)
 	db.Update(func(tx *bolt.Tx) error {
@@ -69,7 +71,7 @@ func TestNewTracker_FromDB(t *testing.T) {
 	})
 	db.Close()
 
-	tr, err := bgtracker.NewTracker("basement-gang", "blahblah.db")
+	tr, err := bgtracker.NewTracker("basement-gang", testDBName)
 
 	ok(t, err)
 	equals(t, tr.Orgname, "basement-gang")
@@ -110,4 +112,9 @@ func TestBGMemberFromJson(t *testing.T) {
 
 	ok(t, err)
 	equals(t, bgmFixt, bgm)
+}
+
+func genDBName() string {
+	rand.Seed(time.Now().Unix())
+	return fmt.Sprintf("testdb_%d", rand.Int())
 }
